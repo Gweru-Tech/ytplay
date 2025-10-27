@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ntando Mods - YouTube Downloader</title>
+  <link id="icon" rel="icon" href="https://qu.ax/rGkeW.jpg" type="image/png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box; 
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+      opacity: 0.3;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 40px;
+      backdrop-filter: blur(10px);
+      animation: slideUp 0.6s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: #667eea;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 1rem;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .search-box input {
+      flex: 1;
+      min-width: 250px;
+      padding: 15px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .btn {
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .loader.active {
+      display: block;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #667eea;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .result {
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .result.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .video-info {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 15px;
+      flex-wrap: wrap;
+    }
+
+    .video-thumbnail {
+      width: 200px;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .video-details {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .video-details h2 {
+      font-size: 1.3rem;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .video-details p {
+      color: #666;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .download-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .download-card {
+      background: white;
+      border: 2px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .download-card:hover {
+      border-color: #667eea;
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+      transform: translateY(-3px);
+    }
+
+    .download-card h3 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+
+    .download-card p {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+    }
+
+    .download-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .download-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .download-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .error {
+      display: none;
+      background: #fee;
+      color: #c33;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border-left: 4px solid #c33;
+    }
+
+    .error.active {
+      display: block;
+      animation: shake 0.5s ease;
+    }
+
+    .success {
+      display: none;
+      background: #d4edda;
+      color: #155724;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border-left: 4px solid #28a745;
+    }
+
+    .success.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 2px solid #e0e0e0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 25px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .video-info {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .video-thumbnail {
+        width: 100%;
+        max-width: 350px;
+      }
+
+      .search-box {
+        flex-direction: column;
+      }
+
+      .search-box input {
+        width: 100%;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  
+  <div class="container">
+    <div class="header">
+      <h1>🎬 YouTube Downloader</h1>
+      <p>Download your favorite YouTube videos in high quality</p>
+    </div>
+
+    <div class="search-box">
+      <input 
+        type="text" 
+        id="youtubeUrl" 
+        placeholder="Paste YouTube URL or search for a video..."
+      >
+      <button class="btn" id="searchBtn">Search Video</button>
+    </div>
+
+    <div class="error" id="error"></div>
+    <div class="success" id="success"></div>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <p style="margin-top: 15px; color: #667eea; font-weight: 600;">Fetching video information...</p>
+    </div>
+
+    <div class="result" id="result">
+      <div class="video-info">
+        <img src="" alt="Thumbnail" class="video-thumbnail" id="thumbnail">
+        <div class="video-details">
+          <h2 id="videoTitle">Video Title</h2>
+          <p><strong>Channel:</strong> <span id="channel">Channel Name</span></p>
+          <p><strong>Duration:</strong> <span id="duration">0:00</span></p>
+          <p><strong>Views:</strong> <span id="views">0</span></p>
+          <p><strong>Published:</strong> <span id="published">Unknown</span></p>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom: 20px; color: #333;">Download Options:</h3>
+      <div class="download-options">
+        <div class="download-card">
+          <h3>🎥 Video (MP4)</h3>
+          <p>High Quality - Video with audio</p>
+          <button class="download-btn" id="mp4Btn" onclick="downloadVideo('mp4')">Download MP4</button>
+        </div>
+
+        <div class="download-card">
+          <h3>🎵 Audio (MP3)</h3>
+          <p>High Quality - Audio only</p>
+          <button class="download-btn" id="mp3Btn" onclick="downloadVideo('mp3')">Download MP3</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>Powered by <strong>Ntando Mods API's</strong></p>
+      <p style="margin-top: 5px; font-size: 0.8rem;">© 2025 All Rights Reserved</p>
+    </div>
+  </div>
+
+  <script>
+    // Particle animation
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particlesArray = [];
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 3 + 1;
+        this.speedX = Math.random() * 1 - 0.5;
+        this.speedY = Math.random() * 1 - 0.5;
+      }
+
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+
+        if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
+        if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
+      }
+
+      draw() {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      particlesArray = [];
+      const numberOfParticles = Math.min((canvas.width * canvas.height) / 15000, 80);
+      for (let i = 0; i < numberOfParticles; i++) {
+        particlesArray.push(new Particle());
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let particle of particlesArray) {
+        particle.update();
+        particle.draw();
+      }
+      requestAnimationFrame(animateParticles);
+    }
+
+    initParticles();
+    animateParticles();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      initParticles();
+    });
+
+    // YouTube Downloader Logic
+    const youtubeUrlInput = document.getElementById('youtubeUrl');
+    const searchBtn = document.getElementById('searchBtn');
+    const loader = document.getElementById('loader');
+    const result = document.getElementById('result');
+    const error = document.getElementById('error');
+    const success = document.getElementById('success');
+
+    let currentVideoUrl = null;
+
+    // Replace these with your actual API endpoints
+    const API_BASE_URL = 'https://hookrest.my.id/docs/';
+    const YTSEARCH_API = `https://hookrest.my.id/search/ssong`;
+    const YTMP3_API = `https://hookrest.my.id/dowload/ytmp3`;
+    const YTMP4_API = `https://hookrest.my.id/dowload/ytmp4`;
+
+    // Extract video ID or URL from input
+    function extractVideoUrl(input) {
+      // Check if it's a YouTube URL
+      const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+        /^([a-zA-Z0-9_-]{11})$/
+      ];
+      
+      for (let pattern of patterns) {
+        const match = input.match(pattern);
+        if (match) {
+          return `https://youtube.com/watch?v=${match[1]}`;
+        }
+      }
+      
+      // If not a URL, return as search query
+      return input;
+    }
+
+    // Show error message
+    function showError(message) {
+      error.textContent = message;
+      error.classList.add('active');
+      success.classList.remove('active');
+      setTimeout(() => {
+        error.classList.remove('active');
+      }, 5000);
+    }
+
+    // Show success message
+    function showSuccess(message) {
+      success.textContent = message;
+      success.classList.add('active');
+      error.classList.remove('active');
+      setTimeout(() => {
+        success.classList.remove('active');
+      }, 5000);
+    }
+
+    // Format numbers
+    function formatNumber(num) {
+      if (!num) return '0';
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toString();
+    }
+
+    // Format duration
+    function formatDuration(duration) {
+      if (!duration) return 'N/A';
+      
+      // If duration is already formatted (like "3:45")
+      if (typeof duration === 'string' && duration.includes(':')) {
+        return duration;
+      }
+      
+      // If duration is in seconds
+      if (typeof duration === 'number') {
+        const hours = Math.floor(duration / 3600);
+        const minutes = Math.floor((duration % 3600) / 60);
+        const secs = duration % 60;
+        
+        if (hours > 0) {
+          return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+        return `${minutes}:${String(secs).padStart(2, '0')}`;
+      }
+      
+      return duration;
+    }
+
+    // Search for video
+    async function searchVideo(query) {
+      loader.classList.add('active');
+      result.classList.remove('active');
+      error.classList.remove('active');
+      success.classList.remove('active');
+      searchBtn.disabled = true;
+
+      try {
+        const response = await fetch(`${YTSEARCH_API}?query=${encodeURIComponent(query)}`);
+        const data = await response.json();
+
+        if (!response.ok || data.error || !data.results || data.results.length === 0) {
+          throw new Error(data.message || 'No videos found. Please try a different search.');
+        }
+
+        // Get the first result
+        const video = data.results[0];
+        currentVideoUrl = video.url;
+        
+        displayVideoInfo(video);
+        
+        loader.classList.remove('active');
+        result.classList.add('active');
+      } catch (err) {
+        loader.classList.remove('active');
+        showError(err.message || 'An error occurred while searching for the video.');
+      } finally {
+        searchBtn.disabled = false;
+      }
+    }
+
+    // Display video information
+    function displayVideoInfo(video) {
+      document.getElementById('thumbnail').src = video.thumbnail || video.image || '';
+      document.getElementById('videoTitle').textContent = video.title || 'Unknown Title';
+      document.getElementById('channel').textContent = video.channel || video.author || 'Unknown Channel';
+      document.getElementById('duration').textContent = formatDuration(video.duration || video.timestamp);
+      document.getElementById('views').textContent = formatNumber(video.views);
+      document.getElementById('published').textContent = video.ago || video.publishedTime || 'Unknown';
+    }
+
+    // Download video
+    async function downloadVideo(format) {
+      if (!currentVideoUrl) {
+        showError('Please search for a video first.');
+        return;
+      }
+
+      const downloadBtn = format === 'mp3' ? document.getElementById('mp3Btn') : document.getElementById('mp4Btn');
+      const originalText = downloadBtn.textContent;
+      
+      try {
+        downloadBtn.disabled = true;
+        downloadBtn.textContent = 'Processing...';
+        
+        const API_URL = format === 'mp3' ? YTMP3_API : YTMP4_API;
+        const response = await fetch(`${API_URL}?url=${encodeURIComponent(currentVideoUrl)}`);
+        const data = await response.json();
+
+        if (!response.ok || data.error) {
+          throw new Error(data.message || `Failed to generate ${format.toUpperCase()} download link`);
+        }
+
+        // Get download URL from various possible response formats
+        const downloadUrl = data.download || data.downloadUrl || data.url || data.link || data.result?.download;
+        
+        if (downloadUrl) {
+          // Create a temporary link and trigger download
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = `video.${format}`;
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          
+          showSuccess(`${format.toUpperCase()} download started! Check your downloads folder.`);
+        } else {
+          throw new Error('Download link not available');
+        }
+      } catch (err) {
+        showError(err.message || `An error occurred while downloading the ${format.toUpperCase()}.`);
+      } finally {
+        downloadBtn.disabled = false;
+        downloadBtn.textContent = originalText;
+      }
+    }
+
+    // Event listeners
+    searchBtn.addEventListener('click', () => {
+      const input = youtubeUrlInput.value.trim();
+      if (!input) {
+        showError('Please enter a YouTube URL or search query.');
+        return;
+      }
+      
+      const videoUrl = extractVideoUrl(input);
+      
+      // Check if it's a direct URL or search query
+      if (videoUrl.startsWith('http')) {
+        currentVideoUrl = videoUrl;
+        // For direct URLs, we'll use the search API to get video info
+        searchVideo(input);
+      } else {
+        searchVideo(input);
+      }
+    });
+
+    youtubeUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        searchBtn.click();
+      }
+    });
+
+    // Make downloadVideo function globally accessible
+    window.downloadVideo = downloadVideo;
+  </script>
+</body>
+</html>
